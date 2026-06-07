@@ -1,0 +1,7 @@
+guia_entrega_final_llm.md
+requisitos.md
+.env
+venv/
+__pycache__/
+*.pyc
+logs/
