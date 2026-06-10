@@ -72,21 +72,22 @@ def bootstrap_database() -> None:
                 ON chat_messages (session_id, created_at)
                 """
             )
-            cursor.execute(
-                """
-                DO $$
-                BEGIN
-                    IF NOT EXISTS (
-                        SELECT 1
-                        FROM pg_indexes
-                        WHERE schemaname = 'public'
-                          AND indexname = 'idx_chunks_embedding_hnsw'
-                    ) THEN
-                        EXECUTE
-                            'CREATE INDEX idx_chunks_embedding_hnsw ON chunks '
-                            'USING hnsw (embedding vector_cosine_ops)';
-                    END IF;
-                END
-                $$;
-                """
-            )
+            if settings.embedding_dimensions <= 2000:
+                cursor.execute(
+                    """
+                    DO $$
+                    BEGIN
+                        IF NOT EXISTS (
+                            SELECT 1
+                            FROM pg_indexes
+                            WHERE schemaname = 'public'
+                              AND indexname = 'idx_chunks_embedding_hnsw'
+                        ) THEN
+                            EXECUTE
+                                'CREATE INDEX idx_chunks_embedding_hnsw ON chunks '
+                                'USING hnsw (embedding vector_cosine_ops)';
+                        END IF;
+                    END
+                    $$;
+                    """
+                )

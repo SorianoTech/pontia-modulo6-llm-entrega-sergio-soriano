@@ -82,3 +82,27 @@ def test_bootstrap_creates_extension_before_registering_vector(monkeypatch) -> N
         == "CREATE EXTENSION IF NOT EXISTS vector"
     )
     assert register_events == ["registered"]
+
+
+def test_bootstrap_skips_hnsw_index_for_high_dimensional_embeddings(monkeypatch) -> None:
+    fake_connection = FakeConnection()
+
+    monkeypatch.setattr(
+        bootstrap,
+        "get_settings",
+        lambda: type("Settings", (), {"embedding_dimensions": 3072})(),
+    )
+
+    @contextmanager
+    def fake_get_db_connection(register_vector_type: bool = True):
+        yield fake_connection
+
+    monkeypatch.setattr(bootstrap, "get_db_connection", fake_get_db_connection)
+    monkeypatch.setattr(bootstrap, "register_vector", lambda connection: None)
+
+    bootstrap.bootstrap_database()
+
+    assert not any(
+        "idx_chunks_embedding_hnsw" in statement
+        for statement in fake_connection.cursor_instance.executed_statements
+    )
