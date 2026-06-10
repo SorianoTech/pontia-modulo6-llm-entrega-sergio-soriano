@@ -1,13 +1,23 @@
 from __future__ import annotations
 
 from datetime import datetime
+from time import perf_counter
 from uuid import UUID, uuid4
 
 from langchain_core.messages import HumanMessage, SystemMessage
 
 from app.core.config import get_settings
 from app.core.logging import get_logger
-from app.core.metrics import CHAT_TURNS_TOTAL
+from app.core.metrics import (
+    CHAT_SOURCE_COUNT,
+    CHAT_TURNS_TOTAL,
+    LLM_INPUT_TOKENS_TOTAL,
+    LLM_OUTPUT_TOKENS_TOTAL,
+    LLM_REQUEST_DURATION_SECONDS,
+    LLM_REQUESTS_TOTAL,
+    LLM_TOTAL_TOKENS_TOTAL,
+    WEATHER_TOOL_CALLS_TOTAL,
+)
 from app.db.bootstrap import bootstrap_database
 from app.db.connection import get_db_connection
 from app.db.repositories import (
@@ -28,6 +38,7 @@ from app.services.conversation import (
 )
 from app.services.ingestion import ingest_pdf
 from app.services.llm import get_chat_client, get_embeddings_client
+from app.services.llm_usage import extract_token_usage
 from app.services.prompts import (
     build_chat_prompt,
     format_context,
@@ -108,6 +119,8 @@ def chat_with_tenerife(payload: ChatRequest) -> ChatResponse:
     weather_result: WeatherToolOutput | None = None
     if _should_fetch_weather(payload.message, stored_history):
         weather_result = get_weather(extract_date_or_default(payload.message))
+        weather_status = "ok" if weather_result.ok else (weather_result.error_type or "error")
+        WEATHER_TOOL_CALLS_TOTAL.labels(status=weather_status).inc()
 
     rag_used = _should_use_rag(payload.message)
     documents = _retrieve_documents(payload.message) if rag_used else []
@@ -118,6 +131,7 @@ def chat_with_tenerife(payload: ChatRequest) -> ChatResponse:
         weather=weather_result,
     )
 
+    llm_started = perf_counter()
     response = get_chat_client().invoke(
         [
             SystemMessage(
@@ -129,13 +143,16 @@ def chat_with_tenerife(payload: ChatRequest) -> ChatResponse:
             HumanMessage(content=prompt),
         ]
     )
+    llm_elapsed = perf_counter() - llm_started
     answer = str(response.content).strip()
     sources = format_sources(documents) if rag_used else []
+    token_usage = extract_token_usage(response)
 
     metadata = {
         "rag_used": rag_used,
         "weather_used": bool(weather_result),
         "source_count": len(sources),
+        "token_usage": token_usage,
     }
 
     with get_db_connection() as connection:
@@ -160,6 +177,20 @@ def chat_with_tenerife(payload: ChatRequest) -> ChatResponse:
         rag_used=str(rag_used).lower(),
         weather_used=str(bool(weather_result)).lower(),
     ).inc()
+    CHAT_SOURCE_COUNT.observe(len(sources))
+    LLM_REQUESTS_TOTAL.labels(model=settings.generation_model).inc()
+    LLM_INPUT_TOKENS_TOTAL.labels(model=settings.generation_model).inc(
+        token_usage["input_tokens"]
+    )
+    LLM_OUTPUT_TOKENS_TOTAL.labels(model=settings.generation_model).inc(
+        token_usage["output_tokens"]
+    )
+    LLM_TOTAL_TOKENS_TOTAL.labels(model=settings.generation_model).inc(
+        token_usage["total_tokens"]
+    )
+    LLM_REQUEST_DURATION_SECONDS.labels(model=settings.generation_model).observe(
+        llm_elapsed
+    )
 
     return ChatResponse(
         session_id=str(session_id),
