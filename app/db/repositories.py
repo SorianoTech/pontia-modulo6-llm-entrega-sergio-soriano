@@ -56,6 +56,20 @@ def insert_chunks(connection: Connection, rows: list[tuple]) -> None:
         )
 
 
+def get_document(connection: Connection, source_name: str) -> dict | None:
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """
+            SELECT source_name, source_path, checksum, metadata
+            FROM documents
+            WHERE source_name = %s
+            """,
+            (source_name,),
+        )
+        row = cursor.fetchone()
+    return None if row is None else dict(row)
+
+
 def count_chunks(connection: Connection, source_name: str | None = None) -> int:
     with connection.cursor() as cursor:
         if source_name:
@@ -164,4 +178,3 @@ def latest_message_timestamp(connection: Connection, session_id: UUID) -> dateti
         )
         row = cursor.fetchone()
     return None if row is None else row["created_at"]
-
