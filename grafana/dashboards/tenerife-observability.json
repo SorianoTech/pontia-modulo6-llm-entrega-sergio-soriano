@@ -420,6 +420,38 @@
       ],
       "title": "Median Retrieved Sources",
       "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 24,
+        "x": 0,
+        "y": 24
+      },
+      "id": 11,
+      "options": {
+        "dedupStrategy": "none",
+        "enableLogDetails": true,
+        "prettifyLogMessage": false,
+        "showCommonLabels": false,
+        "showLabels": true,
+        "showTime": true,
+        "sortOrder": "Descending",
+        "wrapLogMessage": true
+      },
+      "targets": [
+        {
+          "expr": "{job=\"tenerife-app\"}",
+          "queryType": "range",
+          "refId": "A"
+        }
+      ],
+      "title": "Audit Logs",
+      "type": "logs"
     }
   ],
   "refresh": "10s",
@@ -440,5 +472,5 @@
   "timezone": "browser",
   "title": "Tenerife RAG Observability",
   "uid": "tenerife-rag-observability",
-  "version": 2
+  "version": 3
 }

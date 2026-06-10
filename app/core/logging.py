@@ -2,30 +2,73 @@ from __future__ import annotations
 
 import logging
 import sys
+from pathlib import Path
 
 import structlog
 
+from app.core.config import get_settings
+
 
 def configure_logging() -> None:
+    """Configure structured JSON logging to stdout and a local audit file."""
+    settings = get_settings()
+    _ensure_log_directory(settings.audit_log_path)
+
     timestamper = structlog.processors.TimeStamper(fmt="iso")
+    pre_chain = [
+        structlog.contextvars.merge_contextvars,
+        structlog.stdlib.add_logger_name,
+        structlog.stdlib.add_log_level,
+        timestamper,
+    ]
 
     structlog.configure(
         processors=[
-            structlog.contextvars.merge_contextvars,
-            structlog.stdlib.add_log_level,
-            timestamper,
+            *pre_chain,
             structlog.processors.StackInfoRenderer(),
             structlog.processors.format_exc_info,
-            structlog.processors.JSONRenderer(),
+            structlog.stdlib.ProcessorFormatter.wrap_for_formatter,
         ],
-        wrapper_class=structlog.make_filtering_bound_logger(logging.INFO),
-        logger_factory=structlog.PrintLoggerFactory(file=sys.stdout),
+        wrapper_class=structlog.stdlib.BoundLogger,
+        logger_factory=structlog.stdlib.LoggerFactory(),
         cache_logger_on_first_use=True,
     )
 
-    logging.basicConfig(level=logging.INFO, format="%(message)s", stream=sys.stdout)
+    formatter = structlog.stdlib.ProcessorFormatter(
+        processor=structlog.processors.JSONRenderer(),
+        foreign_pre_chain=pre_chain,
+    )
+
+    root_logger = logging.getLogger()
+    for handler in root_logger.handlers[:]:
+        root_logger.removeHandler(handler)
+        handler.close()
+
+    root_logger.setLevel(logging.INFO)
+    root_logger.addHandler(_build_stream_handler(formatter))
+    root_logger.addHandler(_build_file_handler(settings.audit_log_path, formatter))
 
 
 def get_logger(name: str):
     return structlog.get_logger(name)
 
+
+def _ensure_log_directory(log_path: Path) -> None:
+    log_path.parent.mkdir(parents=True, exist_ok=True)
+
+
+def _build_stream_handler(
+    formatter: structlog.stdlib.ProcessorFormatter,
+) -> logging.StreamHandler:
+    handler = logging.StreamHandler(sys.stdout)
+    handler.setFormatter(formatter)
+    return handler
+
+
+def _build_file_handler(
+    log_path: Path,
+    formatter: structlog.stdlib.ProcessorFormatter,
+) -> logging.FileHandler:
+    handler = logging.FileHandler(log_path, encoding="utf-8")
+    handler.setFormatter(formatter)
+    return handler

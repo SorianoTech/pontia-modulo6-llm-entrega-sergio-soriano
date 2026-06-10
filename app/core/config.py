@@ -30,6 +30,7 @@ class Settings(BaseSettings):
     request_timeout_seconds: int = 15
     database_url: str = "postgresql://postgres:postgres@localhost:5432/tenerife_app"
     data_pdf_path: Path = PROJECT_ROOT / "data" / "TENERIFE.pdf"
+    audit_log_path: Path = PROJECT_ROOT / "logs" / "app.jsonl"
     auto_ingest_on_startup: bool = True
     weather_location: str = "Tenerife"
     open_meteo_geocoding_url: str = "https://geocoding-api.open-meteo.com/v1/search"

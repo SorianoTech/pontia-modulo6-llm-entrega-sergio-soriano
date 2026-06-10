@@ -7,7 +7,7 @@ $ErrorActionPreference = "Stop"
 
 $services = @("db")
 if ($WithObservability) {
-    $services += @("prometheus", "grafana")
+    $services += @("prometheus", "grafana", "loki", "promtail")
 }
 
 docker compose -f docker-compose.dev.yml up -d $services
@@ -20,4 +20,5 @@ Write-Host "uvicorn app.main:app --reload" -ForegroundColor Cyan
 if ($WithObservability) {
     Write-Host "Prometheus disponible en: http://localhost:9090" -ForegroundColor Yellow
     Write-Host "Grafana disponible en: http://localhost:3000 (admin/admin)" -ForegroundColor Yellow
+    Write-Host "Loki disponible en: http://localhost:3100" -ForegroundColor Yellow
 }

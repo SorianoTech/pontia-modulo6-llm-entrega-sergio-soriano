@@ -6,6 +6,7 @@ from functools import lru_cache
 import requests
 
 from app.core.config import get_settings
+from app.core.logging import get_logger
 from app.models.schemas import WeatherResult, WeatherToolOutput
 
 WEATHER_CODE_MAP = {
@@ -28,6 +29,8 @@ WEATHER_CODE_MAP = {
     82: "chubascos violentos",
     95: "tormenta",
 }
+
+logger = get_logger(__name__)
 
 
 def normalize_iso_date(raw_date: str) -> str:
@@ -59,6 +62,7 @@ def weather_code_to_text(code: int | None) -> str:
 def geocode_location(location: str) -> dict:
     """Resolve a location name into coordinates and timezone metadata via Open-Meteo."""
     settings = get_settings()
+    logger.info("weather_geocoding_started", location=location)
     response = requests.get(
         settings.open_meteo_geocoding_url,
         params={
@@ -69,10 +73,17 @@ def geocode_location(location: str) -> dict:
         },
         timeout=settings.request_timeout_seconds,
     )
+    logger.info(
+        "weather_http_response",
+        api_name="geocoding",
+        location=location,
+        status_code=response.status_code,
+    )
     response.raise_for_status()
     payload = response.json()
     results = payload.get("results") or []
     if not results:
+        logger.error("weather_geocoding_empty", location=location)
         raise RuntimeError(f"No se encontro ubicacion para '{location}'")
 
     top = results[0]
@@ -88,9 +99,18 @@ def geocode_location(location: str) -> dict:
 def get_weather(raw_date: str) -> WeatherToolOutput:
     """Return the Tenerife weather forecast for the requested date."""
     settings = get_settings()
+    normalized_date: str | None = None
+    location_name = settings.weather_location
     try:
-        date_value = normalize_iso_date(raw_date)
+        normalized_date = normalize_iso_date(raw_date)
+        logger.info(
+            "weather_lookup_started",
+            requested_date=raw_date,
+            normalized_date=normalized_date,
+            location=settings.weather_location,
+        )
         location = geocode_location(settings.weather_location)
+        location_name = location["name"]
         response = requests.get(
             settings.open_meteo_forecast_url,
             params={
@@ -98,10 +118,18 @@ def get_weather(raw_date: str) -> WeatherToolOutput:
                 "longitude": location["longitude"],
                 "daily": "weathercode,temperature_2m_max,temperature_2m_min",
                 "timezone": location["timezone"],
-                "start_date": date_value,
-                "end_date": date_value,
+                "start_date": normalized_date,
+                "end_date": normalized_date,
             },
             timeout=settings.request_timeout_seconds,
+        )
+        logger.info(
+            "weather_http_response",
+            api_name="forecast",
+            requested_date=raw_date,
+            normalized_date=normalized_date,
+            location=location_name,
+            status_code=response.status_code,
         )
         response.raise_for_status()
         payload = response.json()
@@ -124,8 +152,24 @@ def get_weather(raw_date: str) -> WeatherToolOutput:
             timezone=payload.get("timezone", location["timezone"]),
             fuente="open-meteo",
         )
+        logger.info(
+            "weather_lookup_completed",
+            requested_date=raw_date,
+            normalized_date=normalized_date,
+            location=data.ubicacion,
+            status_code=response.status_code,
+            weather_code=data.weather_code,
+        )
         return WeatherToolOutput(ok=True, data=data)
     except ValueError as exc:
+        logger.warning(
+            "weather_lookup_failed",
+            requested_date=raw_date,
+            normalized_date=normalized_date,
+            location=location_name,
+            error_type="validation_error",
+            error=str(exc),
+        )
         return WeatherToolOutput(
             ok=False,
             error_type="validation_error",
@@ -133,6 +177,15 @@ def get_weather(raw_date: str) -> WeatherToolOutput:
             help="Usa fecha en formato YYYY-MM-DD, o 'hoy'/'mañana'.",
         )
     except requests.RequestException as exc:
+        logger.error(
+            "weather_lookup_failed",
+            requested_date=raw_date,
+            normalized_date=normalized_date,
+            location=location_name,
+            error_type="api_error",
+            status_code=None if exc.response is None else exc.response.status_code,
+            error=str(exc),
+        )
         return WeatherToolOutput(
             ok=False,
             error_type="api_error",
@@ -140,6 +193,14 @@ def get_weather(raw_date: str) -> WeatherToolOutput:
             help="No pude consultar Open-Meteo en este momento. Intenta de nuevo.",
         )
     except Exception as exc:  # noqa: BLE001
+        logger.error(
+            "weather_lookup_failed",
+            requested_date=raw_date,
+            normalized_date=normalized_date,
+            location=location_name,
+            error_type="runtime_error",
+            error=str(exc),
+        )
         return WeatherToolOutput(
             ok=False,
             error_type="runtime_error",

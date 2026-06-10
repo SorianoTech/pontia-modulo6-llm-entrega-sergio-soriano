@@ -4,6 +4,8 @@ prune: true
 deleteDatasources:
   - name: Prometheus
     orgId: 1
+  - name: Loki
+    orgId: 1
 
 datasources:
   - name: Prometheus
@@ -15,3 +17,14 @@ datasources:
     isDefault: true
     editable: false
     version: 1
+  - name: Loki
+    uid: loki
+    orgId: 1
+    type: loki
+    access: proxy
+    url: http://loki:3100
+    isDefault: false
+    editable: false
+    version: 1
+    jsonData:
+      maxLines: 1000

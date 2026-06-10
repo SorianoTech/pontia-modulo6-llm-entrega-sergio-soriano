@@ -20,6 +20,7 @@ El proyecto ya incluye:
 - entorno de desarrollo ligero
 - despliegue con Docker Compose
 - métricas Prometheus y dashboard inicial en Grafana
+- logging estructurado JSON en fichero y Loki
 - docstrings en la API principal y soporte para documentación con Sphinx
 
 ## Arquitectura
@@ -119,6 +120,7 @@ Si has levantado observabilidad en desarrollo:
 
 - Prometheus: `http://localhost:9090`
 - Grafana: `http://localhost:3000`
+- Loki: `http://localhost:3100`
 - credenciales: `admin` / `admin`
 
 ## Docker Compose
@@ -138,12 +140,14 @@ Servicios disponibles:
 | API FastAPI | `http://localhost:8000` | Backend |
 | Prometheus | `http://localhost:9090` | Scraping de `/metrics` |
 | Grafana | `http://localhost:3000` | Usuario `admin`, contraseña `admin` |
+| Loki | `http://localhost:3100` | Agregación de logs |
 
 ## Observabilidad
 
 Grafana queda provisionado automáticamente con:
 
 - datasource Prometheus
+- datasource Loki
 - carpeta de dashboards
 - dashboard inicial `Tenerife RAG Observability`
 
@@ -159,6 +163,12 @@ Métricas expuestas actualmente:
 - `llm_request_duration_seconds`
 - `chat_source_count`
 - `weather_tool_calls_total`
+
+Logs de auditoría:
+
+- fichero JSON local: `logs\app.jsonl`
+- visibles en Grafana mediante el panel **Audit Logs**
+- consultables también en **Explore** usando la datasource **Loki**
 
 ## Documentación técnica
 
@@ -316,4 +326,3 @@ docker-compose.dev.yml
 ## Notas
 
 - Si la base vectorial está vacía, el backend intentará indexar `data\TENERIFE.pdf` automáticamente.
-- La UI estática anterior ya no forma parte del proyecto.

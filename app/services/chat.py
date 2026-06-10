@@ -53,6 +53,20 @@ class ChatServiceError(RuntimeError):
     """Raised when the chat service cannot fulfill the request."""
 
 
+def _serialize_chunk_for_audit(document: dict) -> dict:
+    """Extract a compact chunk summary suitable for audit logs."""
+    metadata = document.get("metadata") or {}
+    similarity = document.get("similarity")
+    return {
+        "chunk_key": document.get("chunk_key"),
+        "source_name": document.get("source_name"),
+        "chunk_id": document.get("chunk_id"),
+        "page": document.get("page"),
+        "page_label": metadata.get("page_label"),
+        "similarity": None if similarity is None else round(float(similarity), 4),
+    }
+
+
 def _resolve_session_id(raw_session_id: str | None) -> UUID:
     """Return the provided session identifier or create a new one for first-time users."""
     if raw_session_id:
@@ -124,14 +138,36 @@ def chat_with_tenerife(payload: ChatRequest) -> ChatResponse:
         create_session(connection, session_id)
         stored_history = trim_history(list_recent_messages(connection, session_id=session_id))
 
+    user_has_weather_intent = weather_intent(payload.message)
+    user_has_document_intent = has_document_intent(payload.message)
+    history_mentions_weather = _history_mentions_weather(stored_history)
+    weather_requested = _should_fetch_weather(payload.message, stored_history)
+    rag_used = _should_use_rag(payload.message)
+
+    logger.info(
+        "chat_strategy_selected",
+        session_id=str(session_id),
+        rag_used=rag_used,
+        weather_requested=weather_requested,
+        weather_intent=user_has_weather_intent,
+        document_intent=user_has_document_intent,
+        history_mentions_weather=history_mentions_weather,
+    )
+
     weather_result: WeatherToolOutput | None = None
-    if _should_fetch_weather(payload.message, stored_history):
+    if weather_requested:
         weather_result = get_weather(extract_date_or_default(payload.message))
         weather_status = "ok" if weather_result.ok else (weather_result.error_type or "error")
         WEATHER_TOOL_CALLS_TOTAL.labels(status=weather_status).inc()
 
-    rag_used = _should_use_rag(payload.message)
     documents = _retrieve_documents(payload.message) if rag_used else []
+    logger.info(
+        "rag_chunks_retrieved",
+        session_id=str(session_id),
+        rag_used=rag_used,
+        chunk_count=len(documents),
+        chunks=[_serialize_chunk_for_audit(document) for document in documents],
+    )
     prompt = build_chat_prompt(
         user_message=payload.message,
         history=stored_history,
@@ -155,6 +191,15 @@ def chat_with_tenerife(payload: ChatRequest) -> ChatResponse:
     answer = str(response.content).strip()
     sources = format_sources(documents) if rag_used else []
     token_usage = extract_token_usage(response)
+    logger.info(
+        "chat_llm_completed",
+        session_id=str(session_id),
+        model=settings.generation_model,
+        latency_seconds=round(llm_elapsed, 4),
+        input_tokens=token_usage["input_tokens"],
+        output_tokens=token_usage["output_tokens"],
+        total_tokens=token_usage["total_tokens"],
+    )
 
     metadata = {
         "rag_used": rag_used,

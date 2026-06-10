@@ -45,7 +45,33 @@ services:
     depends_on:
       prometheus:
         condition: service_started
+      loki:
+        condition: service_started
+
+  loki:
+    image: grafana/loki:3.0.0
+    container_name: tenerife-loki-dev
+    command:
+      - -config.file=/etc/loki/config.yml
+    ports:
+      - "3100:3100"
+    volumes:
+      - .\loki\config.yml:/etc/loki/config.yml:ro
+      - loki-dev-data:/loki
+
+  promtail:
+    image: grafana/promtail:3.0.0
+    container_name: tenerife-promtail-dev
+    command:
+      - -config.file=/etc/promtail/config.yml
+    volumes:
+      - .\promtail\config.yml:/etc/promtail/config.yml:ro
+      - .\logs:/var/log/tenerife:ro
+    depends_on:
+      loki:
+        condition: service_started
 
 volumes:
   postgres-dev-data:
   grafana-dev-data:
+  loki-dev-data:
