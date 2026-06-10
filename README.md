@@ -55,6 +55,36 @@ DATABASE_URL=postgresql://postgres:postgres@localhost:5432/tenerife_app
 
 > La aplicación prioriza los valores definidos en `.env` sobre variables del shell.
 
+### Variables de configuración disponibles
+
+| Variable | Descripción | Valor por defecto |
+| --- | --- | --- |
+| `APP_NAME` | Nombre visible de la aplicación FastAPI/Streamlit. | `Tenerife RAG App` |
+| `APP_ENV` | Entorno lógico de ejecución. | `development` |
+| `APP_HOST` | Host donde arranca FastAPI. | `0.0.0.0` |
+| `APP_PORT` | Puerto del backend FastAPI. | `8000` |
+| `STREAMLIT_API_URL` | URL base que usa Streamlit para llamar a la API. | `http://127.0.0.1:8000` |
+| `STREAMLIT_SERVER_PORT` | Puerto en el que se expone Streamlit. | `8501` |
+| `GOOGLE_API_KEY` | Clave de API para Gemini y embeddings. | vacío |
+| `GENERATION_MODEL` | Modelo Gemini usado para generación. | `gemini-2.5-flash-lite` |
+| `EMBEDDING_MODEL` | Modelo usado para embeddings. | `models/gemini-embedding-001` |
+| `GENERATION_TEMPERATURE` | Temperatura del modelo generativo. | `0.2` |
+| `GENERATION_MAX_TOKENS` | Máximo de tokens de salida del LLM. | `1024` |
+| `RAG_TOP_K` | Número de chunks recuperados en retrieval. | `4` |
+| `CHUNK_SIZE` | Tamaño de chunk en la ingesta documental. | `500` |
+| `CHUNK_OVERLAP` | Solape entre chunks consecutivos. | `50` |
+| `EMBEDDING_DIMENSIONS` | Dimensión esperada del vector embedding en pgvector. | `3072` |
+| `REQUEST_TIMEOUT_SECONDS` | Timeout de llamadas HTTP externas. | `15` |
+| `DATABASE_URL` | Cadena de conexión a PostgreSQL. | `postgresql://postgres:postgres@localhost:5432/tenerife_app` |
+| `DATA_PDF_PATH` | Ruta del PDF principal a indexar. | `data\\TENERIFE.pdf` |
+| `AUDIT_LOG_PATH` | Ruta del fichero JSON de auditoría. | `logs\\app.jsonl` |
+| `AUTO_INGEST_ON_STARTUP` | Si la app intenta indexar automáticamente al arrancar. | `true` |
+| `WEATHER_LOCATION` | Ubicación base usada para Open-Meteo. | `Tenerife` |
+| `OPEN_METEO_GEOCODING_URL` | Endpoint de geocodificación de Open-Meteo. | `https://geocoding-api.open-meteo.com/v1/search` |
+| `OPEN_METEO_FORECAST_URL` | Endpoint de predicción meteorológica de Open-Meteo. | `https://api.open-meteo.com/v1/forecast` |
+
+Las variables más habituales ya aparecen en `.env.example`, pero la tabla anterior refleja toda la superficie configurable definida en `app\core\config.py`.
+
 ## Instalación local
 
 ```powershell
