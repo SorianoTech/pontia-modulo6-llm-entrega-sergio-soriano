@@ -97,8 +97,12 @@ docker compose up --build
 ```
 
 3. Abre `http://localhost:8000`; FastAPI arrancará Streamlit y redirigirá la raíz a la UI.
+4. Observabilidad:
+   - Prometheus: `http://localhost:9090`
+   - Grafana: `http://localhost:3000`
+   - credenciales por defecto: `admin` / `admin`
 
-La aplicacion arrancara PostgreSQL con pgvector y FastAPI como backend. Al iniciarse `uvicorn`, se levantara automaticamente la UI Streamlit en el mismo contenedor. Si la base vectorial esta vacia, el backend intentara indexar `data\TENERIFE.pdf` automaticamente.
+La aplicacion arrancara PostgreSQL con pgvector y FastAPI como backend. Al iniciarse `uvicorn`, se levantara automaticamente la UI Streamlit en el mismo contenedor. Además, `docker compose` levanta Prometheus y Grafana ya provisionados para visualizar las métricas del endpoint `/metrics`. Si la base vectorial esta vacia, el backend intentara indexar `data\TENERIFE.pdf` automaticamente.
 
 ## Tests
 
