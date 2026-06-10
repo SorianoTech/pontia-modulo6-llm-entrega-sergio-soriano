@@ -46,6 +46,43 @@ python -m pip install -e .[dev]
 uvicorn app.main:app --reload
 ```
 
+## Entorno de desarrollo rapido
+
+Si no quieres reconstruir la imagen Docker en cada cambio, usa la base de datos en contenedor y ejecuta la app en local con recarga automática.
+
+1. Copia `.env.example` a `.env`.
+2. Instala dependencias:
+
+```powershell
+python -m pip install -e .[dev]
+```
+
+3. Levanta solo PostgreSQL + pgvector:
+
+```powershell
+docker compose -f docker-compose.dev.yml up -d db
+```
+
+O con el helper:
+
+```powershell
+.\scripts\dev-up.ps1
+```
+
+4. Arranca la aplicación en local:
+
+```powershell
+uvicorn app.main:app --reload
+```
+
+5. Cuando termines:
+
+```powershell
+.\scripts\dev-down.ps1
+```
+
+En este modo solo reinicias el proceso local de FastAPI y mantienes la base de datos viva en Docker.
+
 ## Docker Compose
 
 1. Copia `.env.example` a `.env` y completa `GOOGLE_API_KEY`.
