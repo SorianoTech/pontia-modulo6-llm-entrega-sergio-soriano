@@ -11,7 +11,8 @@ def test_configure_logging_writes_json_lines_to_audit_file(monkeypatch, tmp_path
     monkeypatch.setattr("app.core.logging.get_settings", lambda: settings)
 
     configure_logging()
-    get_logger("tests.audit").info("audit_event", key="value")
+    logging.getLogger("uvicorn.access").info("noise_event")
+    get_logger("app.tests.audit").info("audit_event", key="value")
 
     for handler in logging.getLogger().handlers:
         handler.flush()

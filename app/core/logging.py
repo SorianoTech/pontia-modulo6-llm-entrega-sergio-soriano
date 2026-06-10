@@ -9,6 +9,13 @@ import structlog
 from app.core.config import get_settings
 
 
+class AuditLogFilter(logging.Filter):
+    """Allow only application audit events to be written to the JSON audit file."""
+
+    def filter(self, record: logging.LogRecord) -> bool:
+        return record.name.startswith("app.") or record.name == "streamlit_app"
+
+
 def configure_logging() -> None:
     """Configure structured JSON logging to stdout and a local audit file."""
     settings = get_settings()
@@ -71,4 +78,5 @@ def _build_file_handler(
 ) -> logging.FileHandler:
     handler = logging.FileHandler(log_path, encoding="utf-8")
     handler.setFormatter(formatter)
+    handler.addFilter(AuditLogFilter())
     return handler
