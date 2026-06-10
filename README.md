@@ -96,6 +96,12 @@ O con el helper:
 .\scripts\dev-up.ps1
 ```
 
+Si además quieres observabilidad en desarrollo:
+
+```powershell
+.\scripts\dev-up.ps1 -WithObservability
+```
+
 3. Arranca la aplicación:
 
 ```powershell
@@ -107,6 +113,12 @@ uvicorn app.main:app --reload
 ```powershell
 .\scripts\dev-down.ps1
 ```
+
+Si has levantado observabilidad en desarrollo:
+
+- Prometheus: `http://localhost:9090`
+- Grafana: `http://localhost:3000`
+- credenciales: `admin` / `admin`
 
 ## Docker Compose
 
