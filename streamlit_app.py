@@ -11,11 +11,13 @@ from app.ui.streamlit_helpers import build_api_url, format_sources
 
 
 def _api_base_url() -> str:
+    """Return the backend base URL used by the Streamlit client."""
     settings = get_settings()
     return settings.model_dump().get("streamlit_api_url", "http://127.0.0.1:8000")
 
 
 def _chat_request(message: str, session_id: str) -> dict:
+    """Send a chat turn to the backend API and normalize error payloads."""
     response = requests.post(
         build_api_url(_api_base_url(), "/api/v1/chat"),
         json={
@@ -36,6 +38,7 @@ def _chat_request(message: str, session_id: str) -> dict:
 
 
 def _render_sidebar() -> None:
+    """Render navigation hints and reset controls in the sidebar."""
     st.sidebar.title("Tenerife RAG")
     st.sidebar.caption("Asistente turistico con RAG, clima y citas documentales.")
     st.sidebar.write("Sugerencias:")
@@ -53,6 +56,7 @@ def _render_sidebar() -> None:
 
 
 def _render_intro() -> None:
+    """Render the hero content and informational cards for the landing view."""
     st.title("Descubre Tenerife con un chat conversacional")
     st.write(
         "Consulta lugares para visitar, rutas, playas, gastronomía y clima. "
@@ -66,6 +70,7 @@ def _render_intro() -> None:
 
 
 def _render_history() -> None:
+    """Render the persisted conversation history stored in the Streamlit session state."""
     for message in st.session_state.messages:
         with st.chat_message(message["role"]):
             st.markdown(message["content"])
@@ -84,6 +89,7 @@ def _render_history() -> None:
 
 
 def main() -> None:
+    """Run the Streamlit application entrypoint."""
     settings = get_settings()
     st.set_page_config(
         page_title=settings.app_name,
@@ -141,4 +147,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-

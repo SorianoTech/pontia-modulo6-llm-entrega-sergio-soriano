@@ -17,6 +17,7 @@ from app.services.llm import get_embeddings_client
 
 
 def build_chunk_rows(source_name: str, chunks: list, embeddings: list[list[float]]) -> list[tuple]:
+    """Convert chunked documents and embeddings into rows ready for database insertion."""
     rows: list[tuple] = []
     for chunk, embedding in zip(chunks, embeddings, strict=True):
         metadata = dict(chunk.metadata)
@@ -36,6 +37,7 @@ def build_chunk_rows(source_name: str, chunks: list, embeddings: list[list[float
 
 
 def ingest_pdf(force_reindex: bool = True) -> dict:
+    """Index the Tenerife PDF into PostgreSQL and reuse existing data when possible."""
     settings = get_settings()
     bootstrap_database()
     source_name = settings.data_pdf_path.name

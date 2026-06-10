@@ -20,6 +20,7 @@ BASE_DIR = Path(__file__).resolve().parents[1]
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    """Run database bootstrap, optional ingestion, and Streamlit process lifecycle hooks."""
     settings = get_settings()
     streamlit_process = None
     if app.state.run_startup_tasks:
@@ -36,6 +37,7 @@ async def lifespan(app: FastAPI):
 
 
 def create_app(run_startup_tasks: bool = True, run_streamlit: bool = True) -> FastAPI:
+    """Create and configure the FastAPI application instance."""
     configure_logging()
     settings = get_settings()
 
@@ -51,15 +53,18 @@ def create_app(run_startup_tasks: bool = True, run_streamlit: bool = True) -> Fa
 
     @app.get("/health", tags=["health"])
     def healthcheck() -> dict:
+        """Expose a lightweight health probe for orchestration and smoke tests."""
         return {"status": "ok"}
 
     @app.get("/metrics", tags=["observability"])
     def metrics() -> Response:
+        """Expose Prometheus metrics collected by the backend."""
         payload, content_type = render_metrics()
         return Response(content=payload, media_type=content_type)
 
     @app.get("/", tags=["root"])
     def root(request: Request):
+        """Redirect the backend root URL to the Streamlit frontend."""
         streamlit_url = (
             f"{request.url.scheme}://{request.url.hostname}:{settings.streamlit_server_port}"
         )

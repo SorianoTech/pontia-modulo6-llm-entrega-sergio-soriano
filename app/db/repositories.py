@@ -18,6 +18,7 @@ def upsert_document(
     checksum: str,
     metadata: dict,
 ) -> None:
+    """Insert or update document metadata tracked for a source file."""
     with connection.cursor() as cursor:
         cursor.execute(
             """
@@ -34,11 +35,13 @@ def upsert_document(
 
 
 def delete_chunks_for_source(connection: Connection, source_name: str) -> None:
+    """Remove every indexed chunk belonging to a given source document."""
     with connection.cursor() as cursor:
         cursor.execute("DELETE FROM chunks WHERE source_name = %s", (source_name,))
 
 
 def insert_chunks(connection: Connection, rows: list[tuple]) -> None:
+    """Bulk insert chunk rows generated during ingestion."""
     with connection.cursor() as cursor:
         cursor.executemany(
             """
@@ -58,6 +61,7 @@ def insert_chunks(connection: Connection, rows: list[tuple]) -> None:
 
 
 def get_document(connection: Connection, source_name: str) -> dict | None:
+    """Fetch document metadata for a named source if it has already been indexed."""
     with connection.cursor() as cursor:
         cursor.execute(
             """
@@ -72,6 +76,7 @@ def get_document(connection: Connection, source_name: str) -> dict | None:
 
 
 def count_chunks(connection: Connection, source_name: str | None = None) -> int:
+    """Count indexed chunks globally or for a specific source file."""
     with connection.cursor() as cursor:
         if source_name:
             cursor.execute(
@@ -85,6 +90,7 @@ def count_chunks(connection: Connection, source_name: str | None = None) -> int:
 
 
 def search_similar_chunks(connection: Connection, embedding: list[float], limit: int) -> list[dict]:
+    """Return the most similar indexed chunks for a query embedding."""
     query_vector = Vector(embedding)
     with connection.cursor() as cursor:
         cursor.execute(
@@ -108,6 +114,7 @@ def search_similar_chunks(connection: Connection, embedding: list[float], limit:
 
 
 def create_session(connection: Connection, session_id: UUID) -> None:
+    """Create a chat session row or refresh its last updated timestamp."""
     with connection.cursor() as cursor:
         cursor.execute(
             """
@@ -128,6 +135,7 @@ def append_chat_message(
     content: str,
     metadata: dict | None = None,
 ) -> None:
+    """Persist a single chat message and refresh the parent session timestamp."""
     payload = metadata or {}
     with connection.cursor() as cursor:
         cursor.execute(
@@ -149,6 +157,7 @@ def list_recent_messages(
     session_id: UUID,
     limit: int = 12,
 ) -> list[StoredMessage]:
+    """Load the most recent persisted messages for a conversation session."""
     with connection.cursor() as cursor:
         cursor.execute(
             """
@@ -167,6 +176,7 @@ def list_recent_messages(
 
 
 def latest_message_timestamp(connection: Connection, session_id: UUID) -> datetime | None:
+    """Return the creation time of the newest message in a conversation session."""
     with connection.cursor() as cursor:
         cursor.execute(
             """

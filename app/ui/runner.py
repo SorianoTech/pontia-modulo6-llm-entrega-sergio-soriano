@@ -6,6 +6,7 @@ from pathlib import Path
 
 
 def start_streamlit_process(project_root: Path, port: int) -> subprocess.Popen[str]:
+    """Launch Streamlit as a sibling process of the FastAPI server."""
     return subprocess.Popen(
         [
             sys.executable,
@@ -26,6 +27,7 @@ def start_streamlit_process(project_root: Path, port: int) -> subprocess.Popen[s
 
 
 def stop_streamlit_process(process: subprocess.Popen[str] | None) -> None:
+    """Gracefully stop the Streamlit subprocess when the backend shuts down."""
     if process is None or process.poll() is not None:
         return
 
@@ -34,4 +36,3 @@ def stop_streamlit_process(process: subprocess.Popen[str] | None) -> None:
         process.wait(timeout=10)
     except subprocess.TimeoutExpired:
         process.kill()
-

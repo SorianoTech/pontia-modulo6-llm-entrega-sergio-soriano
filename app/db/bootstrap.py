@@ -7,6 +7,7 @@ from app.db.connection import get_db_connection
 
 
 def bootstrap_database() -> None:
+    """Create required extensions, tables, and indexes for the application database."""
     settings = get_settings()
     with get_db_connection(register_vector_type=False) as connection:
         with connection.cursor() as cursor:

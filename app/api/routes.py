@@ -15,11 +15,13 @@ api_router = APIRouter(prefix="/api/v1")
 
 @api_router.get("/info", response_model=list[InfoCard], tags=["info"])
 def get_info() -> list[InfoCard]:
+    """Return the informational cards shown in the Streamlit landing page."""
     return get_info_cards()
 
 
 @api_router.post("/chat", response_model=ChatResponse, tags=["chat"])
 def chat_endpoint(payload: ChatRequest) -> ChatResponse:
+    """Process a conversational turn against the Tenerife assistant."""
     try:
         return chat_with_tenerife(payload)
     except ChatServiceError as exc:
@@ -31,6 +33,7 @@ def chat_endpoint(payload: ChatRequest) -> ChatResponse:
 
 @api_router.post("/ingest", tags=["admin"])
 def ingest_endpoint() -> dict:
+    """Force a document ingestion run for the Tenerife PDF corpus."""
     try:
         return ingest_if_requested(force=True)
     except ChatServiceError as exc:

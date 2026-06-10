@@ -9,6 +9,7 @@ from pypdf import PdfReader
 
 
 def file_sha256(path: Path) -> str:
+    """Compute a stable checksum for a source file used during idempotent ingestion."""
     digest = hashlib.sha256()
     with path.open("rb") as file_handle:
         for chunk in iter(lambda: file_handle.read(8192), b""):
@@ -17,6 +18,7 @@ def file_sha256(path: Path) -> str:
 
 
 def load_pdf_documents(path: Path) -> list[Document]:
+    """Load the Tenerife PDF as LangChain documents enriched with page metadata."""
     if not path.exists():
         raise FileNotFoundError(f"No se encontro el PDF en {path}")
 
@@ -46,6 +48,7 @@ def split_documents(
     chunk_size: int,
     chunk_overlap: int,
 ) -> list[Document]:
+    """Split source pages into retrievable chunks and assign sequential chunk identifiers."""
     splitter = RecursiveCharacterTextSplitter(
         chunk_size=chunk_size,
         chunk_overlap=chunk_overlap,

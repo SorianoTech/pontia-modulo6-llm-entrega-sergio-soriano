@@ -20,6 +20,7 @@ El proyecto ya incluye:
 - entorno de desarrollo ligero
 - despliegue con Docker Compose
 - métricas Prometheus y dashboard inicial en Grafana
+- docstrings en la API principal y soporte para documentación con Sphinx
 
 ## Arquitectura
 
@@ -151,6 +152,24 @@ Métricas expuestas actualmente:
 - `http_requests_total`
 - `http_request_duration_seconds`
 - `chat_turns_total`
+- `llm_requests_total`
+- `llm_input_tokens_total`
+- `llm_output_tokens_total`
+- `llm_total_tokens_total`
+- `llm_request_duration_seconds`
+- `chat_source_count`
+- `weather_tool_calls_total`
+
+## Documentación técnica
+
+Instala dependencias de desarrollo y genera la documentación HTML con Sphinx:
+
+```powershell
+python -m pip install -e .[dev]
+python -m sphinx -b html docs docs\_build\html
+```
+
+El resultado queda en `docs\_build\html\index.html`.
 
 ## Comandos útiles
 
@@ -159,6 +178,7 @@ ruff check .
 pytest
 docker compose config
 python -m pip install -e .[dev]
+python -m sphinx -b html docs docs\_build\html
 ```
 
 ## Estructura principal

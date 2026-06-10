@@ -4,6 +4,7 @@ from typing import Any
 
 
 def extract_token_usage(message: Any) -> dict[str, int]:
+    """Normalize token accounting across different LangChain response metadata shapes."""
     usage = getattr(message, "usage_metadata", {}) or {}
     response_metadata = getattr(message, "response_metadata", {}) or {}
     token_usage = (

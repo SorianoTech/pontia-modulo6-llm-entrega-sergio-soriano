@@ -55,4 +55,5 @@ WEATHER_TOOL_CALLS_TOTAL = Counter(
 
 
 def render_metrics() -> tuple[bytes, str]:
+    """Render the current Prometheus registry using the content type expected by scrapers."""
     return generate_latest(), CONTENT_TYPE_LATEST

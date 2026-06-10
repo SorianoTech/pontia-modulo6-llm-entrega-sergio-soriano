@@ -4,6 +4,7 @@ from app.models.schemas import InfoCard
 
 
 def get_info_cards() -> list[InfoCard]:
+    """Return the static tourism highlights displayed above the chat interface."""
     return [
         InfoCard(
             title="Tenerife norte",

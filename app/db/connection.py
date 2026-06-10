@@ -12,6 +12,7 @@ from app.core.config import get_settings
 
 @contextmanager
 def get_db_connection(register_vector_type: bool = True) -> Iterator[Connection]:
+    """Open a PostgreSQL connection configured for dictionary rows and pgvector support."""
     settings = get_settings()
     connection = connect(
         settings.database_url,

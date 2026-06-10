@@ -54,25 +54,30 @@ class ChatServiceError(RuntimeError):
 
 
 def _resolve_session_id(raw_session_id: str | None) -> UUID:
+    """Return the provided session identifier or create a new one for first-time users."""
     if raw_session_id:
         return UUID(raw_session_id)
     return uuid4()
 
 
 def _history_mentions_weather(messages: list[StoredMessage]) -> bool:
+    """Check whether the recent conversation context already discussed weather."""
     return any(weather_intent(message.content) for message in messages[-4:])
 
 
 def _should_fetch_weather(user_message: str, history: list[StoredMessage]) -> bool:
+    """Decide whether a turn should call the weather tool."""
     followup = any(token in user_message.lower() for token in ("hoy", "mañana", "manana"))
     return weather_intent(user_message) or (followup and _history_mentions_weather(history))
 
 
 def _should_use_rag(user_message: str) -> bool:
+    """Decide whether the response should retrieve supporting document chunks."""
     return has_document_intent(user_message) or not weather_intent(user_message)
 
 
 def ingest_if_requested(force: bool = False) -> dict:
+    """Run ingestion when configured dependencies for document indexing are available."""
     settings = get_settings()
     if not settings.google_api_key:
         raise ChatServiceError("Falta GOOGLE_API_KEY para indexar el corpus documental.")
@@ -80,6 +85,7 @@ def ingest_if_requested(force: bool = False) -> dict:
 
 
 def _ensure_indexed() -> None:
+    """Guarantee that the vector index contains at least one chunk before chatting."""
     with get_db_connection() as connection:
         current_chunks = count_chunks(connection)
 
@@ -96,6 +102,7 @@ def _ensure_indexed() -> None:
 
 
 def _retrieve_documents(question: str) -> list[dict]:
+    """Embed the user question and retrieve the most similar indexed chunks."""
     settings = get_settings()
     query_embedding = get_embeddings_client().embed_query(question)
     with get_db_connection() as connection:
@@ -103,6 +110,7 @@ def _retrieve_documents(question: str) -> list[dict]:
 
 
 def chat_with_tenerife(payload: ChatRequest) -> ChatResponse:
+    """Process a conversational turn with RAG, optional weather lookup, and persistence."""
     settings = get_settings()
     if not settings.google_api_key:
         raise ChatServiceError("Falta GOOGLE_API_KEY para usar el chat conversacional.")

@@ -10,6 +10,8 @@ PROJECT_ROOT = Path(__file__).resolve().parents[2]
 
 
 class Settings(BaseSettings):
+    """Central application settings loaded from `.env` and environment variables."""
+
     app_name: str = "Tenerife RAG App"
     app_env: str = "development"
     app_host: str = "0.0.0.0"
@@ -49,9 +51,11 @@ class Settings(BaseSettings):
         dotenv_settings,
         file_secret_settings,
     ):
+        """Prioritize explicit init values and `.env` entries over shell environment variables."""
         return init_settings, dotenv_settings, env_settings, file_secret_settings
 
 
 @lru_cache(maxsize=1)
 def get_settings() -> Settings:
+    """Return a cached settings instance shared across the application."""
     return Settings()

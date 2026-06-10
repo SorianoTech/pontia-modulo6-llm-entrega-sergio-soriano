@@ -31,6 +31,7 @@ WEATHER_CODE_MAP = {
 
 
 def normalize_iso_date(raw_date: str) -> str:
+    """Normalize free-form date input into the ISO format expected by Open-Meteo."""
     value = (raw_date or "").strip().lower()
     today = datetime.now().date()
 
@@ -48,6 +49,7 @@ def normalize_iso_date(raw_date: str) -> str:
 
 
 def weather_code_to_text(code: int | None) -> str:
+    """Translate an Open-Meteo weather code into a short Spanish description."""
     if code is None:
         return "condicion desconocida"
     return WEATHER_CODE_MAP.get(code, f"codigo meteorologico {code}")
@@ -55,6 +57,7 @@ def weather_code_to_text(code: int | None) -> str:
 
 @lru_cache(maxsize=8)
 def geocode_location(location: str) -> dict:
+    """Resolve a location name into coordinates and timezone metadata via Open-Meteo."""
     settings = get_settings()
     response = requests.get(
         settings.open_meteo_geocoding_url,
@@ -83,6 +86,7 @@ def geocode_location(location: str) -> dict:
 
 
 def get_weather(raw_date: str) -> WeatherToolOutput:
+    """Return the Tenerife weather forecast for the requested date."""
     settings = get_settings()
     try:
         date_value = normalize_iso_date(raw_date)
