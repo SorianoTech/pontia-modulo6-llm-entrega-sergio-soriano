@@ -1,29 +1,48 @@
 # Tenerife RAG App
 
-Aplicacion web conversacional sobre Tenerife basada en el notebook `notebook\rag-tenerife.ipynb`.
+Aplicación conversacional sobre Tenerife basada en RAG, con:
 
-## Objetivos
+- **FastAPI** como backend
+- **Streamlit** como frontend principal
+- **PostgreSQL + pgvector** para persistencia vectorial
+- **Prometheus + Grafana** para observabilidad
 
-- Mantener el conocimiento turístico del PDF `data\TENERIFE.pdf`.
-- Ofrecer chat conversacional con memoria.
-- Responder con citas documentales.
-- Mantener la consulta de clima `get_weather`.
-- Preparar una arquitectura portable con FastAPI, PostgreSQL y pgvector.
+La base documental inicial es `data\TENERIFE.pdf`.
 
-## Estado
+## Estado actual
 
-La base Python del proyecto ya esta modularizada. Las siguientes fases incorporaran:
+El proyecto ya incluye:
 
-- persistencia en pgvector,
-- API FastAPI,
-- frontend web,
-- observabilidad,
-- Docker y CI.
+- chat conversacional con memoria por sesión
+- respuestas documentales con citas
+- consulta de clima integrada
+- ingesta idempotente del PDF
+- entorno de desarrollo ligero
+- despliegue con Docker Compose
+- métricas Prometheus y dashboard inicial en Grafana
 
-## Configuracion
+## Arquitectura
 
-1. Crea un fichero `.env` en la raiz del proyecto.
-2. Define al menos:
+### Backend
+- `app\main.py` arranca FastAPI
+- `app\services\chat.py` orquesta RAG + clima
+- `app\db\*` gestiona PostgreSQL y pgvector
+- `app\services\ingestion.py` indexa el PDF
+
+### Frontend
+- `streamlit_app.py` es la UI principal
+- FastAPI lanza automáticamente Streamlit al arrancar con `uvicorn`
+- la raíz `http://localhost:8000` redirige a la UI Streamlit
+
+### Observabilidad
+- `/metrics` expone métricas Prometheus
+- `prometheus\prometheus.yml` configura scraping
+- `grafana\` contiene datasource, provisioning y dashboard
+
+## Configuración
+
+1. Copia `.env.example` a `.env`.
+2. Define como mínimo:
 
 ```env
 GOOGLE_API_KEY=tu_clave
@@ -32,36 +51,40 @@ EMBEDDING_MODEL=models/gemini-embedding-001
 DATABASE_URL=postgresql://postgres:postgres@localhost:5432/tenerife_app
 ```
 
-> La aplicacion prioriza los valores definidos en `.env` sobre variables de entorno del shell.
+> La aplicación prioriza los valores definidos en `.env` sobre variables del shell.
 
-## Instalacion local
+## Instalación local
 
 ```powershell
 python -m pip install -e .[dev]
 ```
 
-## Ejecucion local
+## Ejecución local
 
-Arranca `uvicorn` y el backend lanzará automáticamente Streamlit:
+Lanza solo FastAPI; el proceso levantará Streamlit automáticamente:
 
 ```powershell
 uvicorn app.main:app --reload
 ```
 
-Abre `http://localhost:8000` y serás redirigido a la UI Streamlit.
+Accesos:
 
-## Entorno de desarrollo rapido
+- UI principal: `http://localhost:8000`
+- Streamlit directo: `http://localhost:8501`
+- API/health: `http://localhost:8000/health`
+- métricas: `http://localhost:8000/metrics`
 
-Si no quieres reconstruir la imagen Docker en cada cambio, usa la base de datos en contenedor y ejecuta solo `uvicorn` en local. El frontend Streamlit se lanzará automáticamente.
+## Entorno de desarrollo rápido
 
-1. Copia `.env.example` a `.env`.
-2. Instala dependencias:
+Si no quieres reconstruir contenedores en cada cambio:
+
+1. Instala dependencias:
 
 ```powershell
 python -m pip install -e .[dev]
 ```
 
-3. Levanta solo PostgreSQL + pgvector:
+2. Levanta solo PostgreSQL + pgvector:
 
 ```powershell
 docker compose -f docker-compose.dev.yml up -d db
@@ -73,39 +96,77 @@ O con el helper:
 .\scripts\dev-up.ps1
 ```
 
-4. Arranca la aplicación:
+3. Arranca la aplicación:
 
 ```powershell
 uvicorn app.main:app --reload
 ```
 
-5. Cuando termines:
+4. Cuando termines:
 
 ```powershell
 .\scripts\dev-down.ps1
 ```
 
-En este modo solo reinicias `uvicorn` y mantienes la base de datos viva en Docker.
-
 ## Docker Compose
 
-1. Copia `.env.example` a `.env` y completa `GOOGLE_API_KEY`.
-2. Levanta la aplicacion:
+Levanta toda la solución:
 
 ```powershell
 docker compose up --build
 ```
 
-3. Abre `http://localhost:8000`; FastAPI arrancará Streamlit y redirigirá la raíz a la UI.
-4. Observabilidad:
-   - Prometheus: `http://localhost:9090`
-   - Grafana: `http://localhost:3000`
-   - credenciales por defecto: `admin` / `admin`
+Servicios disponibles:
 
-La aplicacion arrancara PostgreSQL con pgvector y FastAPI como backend. Al iniciarse `uvicorn`, se levantara automaticamente la UI Streamlit en el mismo contenedor. Además, `docker compose` levanta Prometheus y Grafana ya provisionados para visualizar las métricas del endpoint `/metrics`. Si la base vectorial esta vacia, el backend intentara indexar `data\TENERIFE.pdf` automaticamente.
+| Servicio | URL | Notas |
+| --- | --- | --- |
+| UI principal | `http://localhost:8000` | Redirige a Streamlit |
+| Streamlit | `http://localhost:8501` | UI servida por el proceso lanzado desde FastAPI |
+| API FastAPI | `http://localhost:8000` | Backend |
+| Prometheus | `http://localhost:9090` | Scraping de `/metrics` |
+| Grafana | `http://localhost:3000` | Usuario `admin`, contraseña `admin` |
 
-## Tests
+## Observabilidad
+
+Grafana queda provisionado automáticamente con:
+
+- datasource Prometheus
+- carpeta de dashboards
+- dashboard inicial `Tenerife RAG Observability`
+
+Métricas expuestas actualmente:
+
+- `http_requests_total`
+- `http_request_duration_seconds`
+- `chat_turns_total`
+
+## Comandos útiles
 
 ```powershell
+ruff check .
 pytest
+docker compose config
+python -m pip install -e .[dev]
 ```
+
+## Estructura principal
+
+```text
+app/
+  api/
+  core/
+  db/
+  services/
+  ui/
+grafana/
+prometheus/
+scripts/
+streamlit_app.py
+docker-compose.yml
+docker-compose.dev.yml
+```
+
+## Notas
+
+- Si la base vectorial está vacía, el backend intentará indexar `data\TENERIFE.pdf` automáticamente.
+- La UI estática anterior ya no forma parte del proyecto.
