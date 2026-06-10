@@ -11,14 +11,15 @@ from app.core.config import get_settings
 
 
 @contextmanager
-def get_db_connection() -> Iterator[Connection]:
+def get_db_connection(register_vector_type: bool = True) -> Iterator[Connection]:
     settings = get_settings()
     connection = connect(
         settings.database_url,
         autocommit=True,
         row_factory=dict_row,
     )
-    register_vector(connection)
+    if register_vector_type:
+        register_vector(connection)
     try:
         yield connection
     finally:

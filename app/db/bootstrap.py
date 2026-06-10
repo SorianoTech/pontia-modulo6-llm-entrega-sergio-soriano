@@ -1,14 +1,17 @@
 from __future__ import annotations
 
+from pgvector.psycopg import register_vector
+
 from app.core.config import get_settings
 from app.db.connection import get_db_connection
 
 
 def bootstrap_database() -> None:
     settings = get_settings()
-    with get_db_connection() as connection:
+    with get_db_connection(register_vector_type=False) as connection:
         with connection.cursor() as cursor:
             cursor.execute("CREATE EXTENSION IF NOT EXISTS vector")
+            register_vector(connection)
             cursor.execute(
                 """
                 CREATE TABLE IF NOT EXISTS documents (
