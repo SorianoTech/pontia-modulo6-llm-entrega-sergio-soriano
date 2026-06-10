@@ -1,7 +1,14 @@
 guia_entrega_final_llm.md
 requisitos.md
 .env
+**/.env
 venv/
+.venv/
 __pycache__/
 *.pyc
 logs/
+.pytest_cache/
+.ruff_cache/
+dist/
+build/
+*.egg-info/
