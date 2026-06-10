@@ -3,6 +3,7 @@ from __future__ import annotations
 from datetime import datetime
 from uuid import UUID
 
+from pgvector import Vector
 from psycopg import Connection
 from psycopg.types.json import Jsonb
 
@@ -84,6 +85,7 @@ def count_chunks(connection: Connection, source_name: str | None = None) -> int:
 
 
 def search_similar_chunks(connection: Connection, embedding: list[float], limit: int) -> list[dict]:
+    query_vector = Vector(embedding)
     with connection.cursor() as cursor:
         cursor.execute(
             """
@@ -99,7 +101,7 @@ def search_similar_chunks(connection: Connection, embedding: list[float], limit:
             ORDER BY embedding <=> %s
             LIMIT %s
             """,
-            (embedding, embedding, limit),
+            (query_vector, query_vector, limit),
         )
         rows = cursor.fetchall()
     return list(rows)

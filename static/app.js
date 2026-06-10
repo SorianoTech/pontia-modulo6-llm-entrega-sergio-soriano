@@ -28,6 +28,19 @@ const createMessage = (role, content, sources = []) => {
     messagesContainer.scrollTop = messagesContainer.scrollHeight;
 };
 
+const parseResponsePayload = async (response) => {
+    const contentType = response.headers.get("content-type") || "";
+
+    if (contentType.includes("application/json")) {
+        return response.json();
+    }
+
+    const text = await response.text();
+    return {
+        detail: text || "No se pudo completar la consulta.",
+    };
+};
+
 chatForm.addEventListener("submit", async (event) => {
     event.preventDefault();
 
@@ -54,7 +67,7 @@ chatForm.addEventListener("submit", async (event) => {
             }),
         });
 
-        const payload = await response.json();
+        const payload = await parseResponsePayload(response);
         if (!response.ok) {
             throw new Error(payload.detail || "No se pudo completar la consulta.");
         }
@@ -68,4 +81,3 @@ chatForm.addEventListener("submit", async (event) => {
         button.disabled = false;
     }
 });
-
