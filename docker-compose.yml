@@ -1,0 +1,41 @@
+services:
+  db:
+    image: pgvector/pgvector:pg16
+    container_name: tenerife-db
+    environment:
+      POSTGRES_DB: tenerife_app
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d tenerife_app"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: tenerife-web
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@db:5432/tenerife_app
+      APP_HOST: 0.0.0.0
+      APP_PORT: 8000
+      AUTO_INGEST_ON_STARTUP: "true"
+      GOOGLE_API_KEY: ${GOOGLE_API_KEY:-}
+      GENERATION_MODEL: ${GENERATION_MODEL:-gemini-2.5-flash-lite}
+      EMBEDDING_MODEL: ${EMBEDDING_MODEL:-models/gemini-embedding-001}
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - .\data:/app/data:ro
+
+volumes:
+  postgres-data:

@@ -40,9 +40,27 @@ DATABASE_URL=postgresql://postgres:postgres@localhost:5432/tenerife_app
 python -m pip install -e .[dev]
 ```
 
+## Ejecucion local
+
+```powershell
+uvicorn app.main:app --reload
+```
+
+## Docker Compose
+
+1. Copia `.env.example` a `.env` y completa `GOOGLE_API_KEY`.
+2. Levanta la aplicacion:
+
+```powershell
+docker compose up --build
+```
+
+3. Abre `http://localhost:8000`.
+
+La aplicacion arrancara PostgreSQL con pgvector y, si la base vectorial esta vacia, intentara indexar `data\TENERIFE.pdf` automaticamente.
+
 ## Tests
 
 ```powershell
 pytest
 ```
-
