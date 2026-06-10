@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ app_name }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', path='/app.css') }}">
+</head>
+<body>
+    <main class="layout">
+        <section class="hero">
+            <div class="hero__copy">
+                <p class="eyebrow">Guia conversacional</p>
+                <h1>Descubre Tenerife con un chat RAG</h1>
+                <p class="hero__text">
+                    Consulta rutas, playas, gastronomia y clima en una sola experiencia.
+                    Las respuestas documentales incluyen fuentes del PDF de referencia.
+                </p>
+            </div>
+        </section>
+
+        <section class="cards">
+            {% for card in cards %}
+            <article class="card">
+                <h2>{{ card.title }}</h2>
+                <p>{{ card.description }}</p>
+            </article>
+            {% endfor %}
+        </section>
+
+        <section class="chat">
+            <div class="chat__header">
+                <div>
+                    <p class="eyebrow">Chat</p>
+                    <h2>Pregunta sobre Tenerife</h2>
+                </div>
+                <span class="badge">RAG + clima</span>
+            </div>
+
+            <div id="messages" class="messages">
+                <article class="message message--assistant">
+                    <p class="message__role">Asistente</p>
+                    <p>Puedo ayudarte con lugares para visitar, playas, restaurantes y el clima en Tenerife.</p>
+                </article>
+            </div>
+
+            <form id="chat-form" class="chat__form">
+                <label class="sr-only" for="message">Mensaje</label>
+                <textarea
+                    id="message"
+                    name="message"
+                    rows="3"
+                    placeholder="Ejemplo: ¿Qué zona recomiendas para una primera visita y qué tiempo hará mañana?"
+                    required
+                ></textarea>
+                <button type="submit">Enviar</button>
+            </form>
+        </section>
+    </main>
+
+    <script src="{{ url_for('static', path='/app.js') }}"></script>
+</body>
+</html>
+
