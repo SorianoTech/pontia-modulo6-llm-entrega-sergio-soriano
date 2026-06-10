@@ -14,6 +14,8 @@ class Settings(BaseSettings):
     app_env: str = "development"
     app_host: str = "0.0.0.0"
     app_port: int = 8000
+    streamlit_api_url: str = "http://127.0.0.1:8000"
+    streamlit_server_port: int = 8501
     google_api_key: str | None = Field(default=None, alias="GOOGLE_API_KEY")
     generation_model: str = "gemini-2.5-flash-lite"
     embedding_model: str = "models/gemini-embedding-001"
@@ -53,4 +55,3 @@ class Settings(BaseSettings):
 @lru_cache(maxsize=1)
 def get_settings() -> Settings:
     return Settings()
-

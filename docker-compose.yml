@@ -37,5 +37,27 @@ services:
     volumes:
       - .\data:/app/data:ro
 
+  ui:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: tenerife-ui
+    environment:
+      STREAMLIT_API_URL: http://web:8000
+      STREAMLIT_SERVER_PORT: 8501
+    command:
+      [
+        "streamlit",
+        "run",
+        "streamlit_app.py",
+        "--server.address=0.0.0.0",
+        "--server.port=8501",
+      ]
+    ports:
+      - "8501:8501"
+    depends_on:
+      web:
+        condition: service_started
+
 volumes:
   postgres-data:

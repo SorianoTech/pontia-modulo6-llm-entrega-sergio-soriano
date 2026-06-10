@@ -42,13 +42,21 @@ python -m pip install -e .[dev]
 
 ## Ejecucion local
 
+Backend:
+
 ```powershell
 uvicorn app.main:app --reload
 ```
 
+Frontend Streamlit:
+
+```powershell
+streamlit run streamlit_app.py
+```
+
 ## Entorno de desarrollo rapido
 
-Si no quieres reconstruir la imagen Docker en cada cambio, usa la base de datos en contenedor y ejecuta la app en local con recarga automática.
+Si no quieres reconstruir la imagen Docker en cada cambio, usa la base de datos en contenedor y ejecuta backend y UI en local con recarga automática.
 
 1. Copia `.env.example` a `.env`.
 2. Instala dependencias:
@@ -69,19 +77,25 @@ O con el helper:
 .\scripts\dev-up.ps1
 ```
 
-4. Arranca la aplicación en local:
+4. Arranca el backend:
 
 ```powershell
 uvicorn app.main:app --reload
 ```
 
-5. Cuando termines:
+5. Arranca la UI con Streamlit:
+
+```powershell
+streamlit run streamlit_app.py
+```
+
+6. Cuando termines:
 
 ```powershell
 .\scripts\dev-down.ps1
 ```
 
-En este modo solo reinicias el proceso local de FastAPI y mantienes la base de datos viva en Docker.
+En este modo solo reinicias los procesos locales de FastAPI y Streamlit y mantienes la base de datos viva en Docker.
 
 ## Docker Compose
 
@@ -92,9 +106,10 @@ En este modo solo reinicias el proceso local de FastAPI y mantienes la base de d
 docker compose up --build
 ```
 
-3. Abre `http://localhost:8000`.
+3. Abre `http://localhost:8501` para la UI Streamlit.
+4. El backend API queda disponible en `http://localhost:8000`.
 
-La aplicacion arrancara PostgreSQL con pgvector y, si la base vectorial esta vacia, intentara indexar `data\TENERIFE.pdf` automaticamente.
+La aplicacion arrancara PostgreSQL con pgvector, FastAPI como backend y Streamlit como frontend. Si la base vectorial esta vacia, el backend intentara indexar `data\TENERIFE.pdf` automaticamente.
 
 ## Tests
 
