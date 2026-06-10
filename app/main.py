@@ -4,9 +4,7 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 
 from fastapi import FastAPI, Request
-from fastapi.responses import HTMLResponse, Response
-from fastapi.staticfiles import StaticFiles
-from fastapi.templating import Jinja2Templates
+from fastapi.responses import RedirectResponse, Response
 
 from app.api.routes import api_router
 from app.core.config import get_settings
@@ -15,15 +13,15 @@ from app.core.metrics import render_metrics
 from app.core.middleware import RequestContextMiddleware
 from app.db.bootstrap import bootstrap_database
 from app.services.chat import ChatServiceError, ingest_if_requested
-from app.services.content import get_info_cards
+from app.ui.runner import start_streamlit_process, stop_streamlit_process
 
 BASE_DIR = Path(__file__).resolve().parents[1]
-templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     settings = get_settings()
+    streamlit_process = None
     if app.state.run_startup_tasks:
         bootstrap_database()
         if settings.auto_ingest_on_startup:
@@ -31,10 +29,13 @@ async def lifespan(app: FastAPI):
                 ingest_if_requested(force=False)
             except ChatServiceError:
                 pass
+    if app.state.run_streamlit:
+        streamlit_process = start_streamlit_process(BASE_DIR, settings.streamlit_server_port)
     yield
+    stop_streamlit_process(streamlit_process)
 
 
-def create_app(run_startup_tasks: bool = True) -> FastAPI:
+def create_app(run_startup_tasks: bool = True, run_streamlit: bool = True) -> FastAPI:
     configure_logging()
     settings = get_settings()
 
@@ -44,9 +45,9 @@ def create_app(run_startup_tasks: bool = True) -> FastAPI:
         lifespan=lifespan,
     )
     app.state.run_startup_tasks = run_startup_tasks
+    app.state.run_streamlit = run_streamlit
     app.add_middleware(RequestContextMiddleware)
     app.include_router(api_router)
-    app.mount("/static", StaticFiles(directory=str(BASE_DIR / "static")), name="static")
 
     @app.get("/health", tags=["health"])
     def healthcheck() -> dict:
@@ -57,16 +58,12 @@ def create_app(run_startup_tasks: bool = True) -> FastAPI:
         payload, content_type = render_metrics()
         return Response(content=payload, media_type=content_type)
 
-    @app.get("/", response_class=HTMLResponse, tags=["root"])
+    @app.get("/", tags=["root"])
     def root(request: Request):
-        return templates.TemplateResponse(
-            request=request,
-            name="index.html",
-            context={
-                "app_name": settings.app_name,
-                "cards": get_info_cards(),
-            },
+        streamlit_url = (
+            f"{request.url.scheme}://{request.url.hostname}:{settings.streamlit_server_port}"
         )
+        return RedirectResponse(url=streamlit_url, status_code=307)
 
     return app
 

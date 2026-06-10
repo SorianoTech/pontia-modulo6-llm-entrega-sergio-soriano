@@ -29,8 +29,6 @@ RUN useradd --create-home --shell /usr/sbin/nologin appuser
 
 COPY --from=builder /opt/venv /opt/venv
 COPY app ./app
-COPY templates ./templates
-COPY static ./static
 COPY data ./data
 COPY scripts ./scripts
 COPY streamlit_app.py ./streamlit_app.py

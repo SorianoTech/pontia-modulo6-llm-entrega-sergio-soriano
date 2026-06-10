@@ -42,21 +42,17 @@ python -m pip install -e .[dev]
 
 ## Ejecucion local
 
-Backend:
+Arranca `uvicorn` y el backend lanzará automáticamente Streamlit:
 
 ```powershell
 uvicorn app.main:app --reload
 ```
 
-Frontend Streamlit:
-
-```powershell
-streamlit run streamlit_app.py
-```
+Abre `http://localhost:8000` y serás redirigido a la UI Streamlit.
 
 ## Entorno de desarrollo rapido
 
-Si no quieres reconstruir la imagen Docker en cada cambio, usa la base de datos en contenedor y ejecuta backend y UI en local con recarga automática.
+Si no quieres reconstruir la imagen Docker en cada cambio, usa la base de datos en contenedor y ejecuta solo `uvicorn` en local. El frontend Streamlit se lanzará automáticamente.
 
 1. Copia `.env.example` a `.env`.
 2. Instala dependencias:
@@ -77,25 +73,19 @@ O con el helper:
 .\scripts\dev-up.ps1
 ```
 
-4. Arranca el backend:
+4. Arranca la aplicación:
 
 ```powershell
 uvicorn app.main:app --reload
 ```
 
-5. Arranca la UI con Streamlit:
-
-```powershell
-streamlit run streamlit_app.py
-```
-
-6. Cuando termines:
+5. Cuando termines:
 
 ```powershell
 .\scripts\dev-down.ps1
 ```
 
-En este modo solo reinicias los procesos locales de FastAPI y Streamlit y mantienes la base de datos viva en Docker.
+En este modo solo reinicias `uvicorn` y mantienes la base de datos viva en Docker.
 
 ## Docker Compose
 
@@ -106,10 +96,9 @@ En este modo solo reinicias los procesos locales de FastAPI y Streamlit y mantie
 docker compose up --build
 ```
 
-3. Abre `http://localhost:8501` para la UI Streamlit.
-4. El backend API queda disponible en `http://localhost:8000`.
+3. Abre `http://localhost:8000`; FastAPI arrancará Streamlit y redirigirá la raíz a la UI.
 
-La aplicacion arrancara PostgreSQL con pgvector, FastAPI como backend y Streamlit como frontend. Si la base vectorial esta vacia, el backend intentara indexar `data\TENERIFE.pdf` automaticamente.
+La aplicacion arrancara PostgreSQL con pgvector y FastAPI como backend. Al iniciarse `uvicorn`, se levantara automaticamente la UI Streamlit en el mismo contenedor. Si la base vectorial esta vacia, el backend intentara indexar `data\TENERIFE.pdf` automaticamente.
 
 ## Tests
 
