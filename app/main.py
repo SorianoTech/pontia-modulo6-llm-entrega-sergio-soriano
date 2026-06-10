@@ -4,13 +4,15 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 
 from fastapi import FastAPI, Request
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, Response
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
 from app.api.routes import api_router
 from app.core.config import get_settings
 from app.core.logging import configure_logging
+from app.core.metrics import render_metrics
+from app.core.middleware import RequestContextMiddleware
 from app.db.bootstrap import bootstrap_database
 from app.services.chat import ChatServiceError, ingest_if_requested
 from app.services.content import get_info_cards
@@ -42,12 +44,18 @@ def create_app(run_startup_tasks: bool = True) -> FastAPI:
         lifespan=lifespan,
     )
     app.state.run_startup_tasks = run_startup_tasks
+    app.add_middleware(RequestContextMiddleware)
     app.include_router(api_router)
     app.mount("/static", StaticFiles(directory=str(BASE_DIR / "static")), name="static")
 
     @app.get("/health", tags=["health"])
     def healthcheck() -> dict:
         return {"status": "ok"}
+
+    @app.get("/metrics", tags=["observability"])
+    def metrics() -> Response:
+        payload, content_type = render_metrics()
+        return Response(content=payload, media_type=content_type)
 
     @app.get("/", response_class=HTMLResponse, tags=["root"])
     def root(request: Request):

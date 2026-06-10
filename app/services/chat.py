@@ -7,6 +7,7 @@ from langchain_core.messages import HumanMessage, SystemMessage
 
 from app.core.config import get_settings
 from app.core.logging import get_logger
+from app.core.metrics import CHAT_TURNS_TOTAL
 from app.db.bootstrap import bootstrap_database
 from app.db.connection import get_db_connection
 from app.db.repositories import (
@@ -155,6 +156,10 @@ def chat_with_tenerife(payload: ChatRequest) -> ChatResponse:
         weather_used=bool(weather_result),
         source_count=len(sources),
     )
+    CHAT_TURNS_TOTAL.labels(
+        rag_used=str(rag_used).lower(),
+        weather_used=str(bool(weather_result)).lower(),
+    ).inc()
 
     return ChatResponse(
         session_id=str(session_id),

@@ -20,3 +20,12 @@ def test_root_returns_html_page() -> None:
     assert response.status_code == 200
     assert "text/html" in response.headers["content-type"]
     assert "Descubre Tenerife con un chat RAG" in response.text
+
+
+def test_metrics_endpoint_returns_prometheus_payload() -> None:
+    client = TestClient(create_app(run_startup_tasks=False))
+
+    response = client.get("/metrics")
+
+    assert response.status_code == 200
+    assert "http_requests_total" in response.text
