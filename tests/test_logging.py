@@ -31,6 +31,7 @@ def test_serialize_chunk_for_audit_returns_compact_chunk_fields() -> None:
             "chunk_id": 4,
             "page": 2,
             "similarity": 0.98765,
+            "content": "Texto del chunk usado para responder.",
             "metadata": {"page_label": "3"},
         }
     )
@@ -42,4 +43,5 @@ def test_serialize_chunk_for_audit_returns_compact_chunk_fields() -> None:
         "page": 2,
         "page_label": "3",
         "similarity": 0.9877,
+        "content": "Texto del chunk usado para responder.",
     }

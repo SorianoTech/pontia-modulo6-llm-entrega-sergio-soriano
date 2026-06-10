@@ -169,6 +169,7 @@ Logs de auditoría:
 - fichero JSON local: `logs\app.jsonl`
 - visibles en Grafana mediante el panel **Audit Logs**
 - consultables también en **Explore** usando la datasource **Loki**
+- incluyen mensaje del usuario, prompt enviado al LLM, respuesta final y contenido de los chunks recuperados
 
 ## Documentación técnica
 

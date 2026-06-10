@@ -64,6 +64,7 @@ def _serialize_chunk_for_audit(document: dict) -> dict:
         "page": document.get("page"),
         "page_label": metadata.get("page_label"),
         "similarity": None if similarity is None else round(float(similarity), 4),
+        "content": document.get("content"),
     }
 
 
@@ -147,6 +148,7 @@ def chat_with_tenerife(payload: ChatRequest) -> ChatResponse:
     logger.info(
         "chat_strategy_selected",
         session_id=str(session_id),
+        user_message=payload.message,
         rag_used=rag_used,
         weather_requested=weather_requested,
         weather_intent=user_has_weather_intent,
@@ -174,15 +176,23 @@ def chat_with_tenerife(payload: ChatRequest) -> ChatResponse:
         context=format_context(documents),
         weather=weather_result,
     )
+    system_instruction = (
+        "Actua como guia turistico fiable de Tenerife. "
+        "No inventes datos y resume con claridad."
+    )
+    logger.info(
+        "chat_llm_prompt_prepared",
+        session_id=str(session_id),
+        model=settings.generation_model,
+        system_instruction=system_instruction,
+        llm_prompt=prompt,
+    )
 
     llm_started = perf_counter()
     response = get_chat_client().invoke(
         [
             SystemMessage(
-                content=(
-                    "Actua como guia turistico fiable de Tenerife. "
-                    "No inventes datos y resume con claridad."
-                )
+                content=system_instruction
             ),
             HumanMessage(content=prompt),
         ]
@@ -199,6 +209,7 @@ def chat_with_tenerife(payload: ChatRequest) -> ChatResponse:
         input_tokens=token_usage["input_tokens"],
         output_tokens=token_usage["output_tokens"],
         total_tokens=token_usage["total_tokens"],
+        answer=answer,
     )
 
     metadata = {
