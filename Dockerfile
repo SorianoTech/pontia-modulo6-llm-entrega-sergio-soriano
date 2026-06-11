@@ -34,6 +34,8 @@ COPY scripts ./scripts
 COPY streamlit_app.py ./streamlit_app.py
 COPY pyproject.toml README.md ./
 
+RUN mkdir -p /app/logs && chown -R appuser:appuser /app/logs
+
 USER appuser
 
 EXPOSE 8000

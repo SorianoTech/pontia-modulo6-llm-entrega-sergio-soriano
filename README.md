@@ -198,6 +198,8 @@ Servicios disponibles:
 | Grafana | `http://localhost:3000` | Usuario `admin`, contraseña `admin` |
 | Loki | `http://localhost:3100` | Agregación de logs |
 
+En la pila Dockerizada, los logs de auditoría de la app se guardan en el volumen Docker **`app-logs`** para evitar problemas de permisos al ejecutar el contenedor en Linux.
+
 ### Docker Compose con Ollama
 
 Si quieres levantar también **Ollama** y que la aplicación use modelos locales, arranca la pila combinando ambos ficheros:
