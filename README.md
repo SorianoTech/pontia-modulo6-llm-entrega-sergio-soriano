@@ -216,6 +216,8 @@ Este overlay:
 
 La primera puesta en marcha puede tardar bastante porque descarga e importa el modelo GGUF.
 
+> Los ficheros `docker-compose` usan rutas relativas portables (`./...`) para que funcionen tanto en Windows como en Linux. Si ejecutas Docker en Linux, lanza `docker compose` desde la raíz del repositorio para que los bind mounts resuelvan correctamente.
+
 ## Observabilidad
 
 Grafana queda provisionado automáticamente con:

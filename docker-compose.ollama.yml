@@ -38,7 +38,7 @@ services:
       HF_TOKEN: ${HF_TOKEN:-}
     command: python /scripts/ollama_setup.py
     volumes:
-      - .\scripts\ollama_setup.py:/scripts/ollama_setup.py:ro
+      - ./scripts/ollama_setup.py:/scripts/ollama_setup.py:ro
       - ollama-imports:/models
     depends_on:
       ollama:

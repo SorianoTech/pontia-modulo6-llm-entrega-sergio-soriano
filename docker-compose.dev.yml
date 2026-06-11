@@ -24,7 +24,7 @@ services:
     ports:
       - "9090:9090"
     volumes:
-      - .\prometheus\prometheus.dev.yml:/etc/prometheus/prometheus.yml:ro
+      - ./prometheus/prometheus.dev.yml:/etc/prometheus/prometheus.yml:ro
     extra_hosts:
       - "host.docker.internal:host-gateway"
 
@@ -39,9 +39,9 @@ services:
       - "3000:3000"
     volumes:
       - grafana-dev-data:/var/lib/grafana
-      - .\grafana\provisioning\datasources:/etc/grafana/provisioning/datasources:ro
-      - .\grafana\provisioning\dashboards:/etc/grafana/provisioning/dashboards:ro
-      - .\grafana\dashboards:/var/lib/grafana/dashboards:ro
+      - ./grafana/provisioning/datasources:/etc/grafana/provisioning/datasources:ro
+      - ./grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards:ro
+      - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
     depends_on:
       prometheus:
         condition: service_started
@@ -56,7 +56,7 @@ services:
     ports:
       - "3100:3100"
     volumes:
-      - .\loki\config.yml:/etc/loki/config.yml:ro
+      - ./loki/config.yml:/etc/loki/config.yml:ro
       - loki-dev-data:/loki
 
   promtail:
@@ -65,8 +65,8 @@ services:
     command:
       - -config.file=/etc/promtail/config.yml
     volumes:
-      - .\promtail\config.yml:/etc/promtail/config.yml:ro
-      - .\logs:/var/log/tenerife:ro
+      - ./promtail/config.yml:/etc/promtail/config.yml:ro
+      - ./logs:/var/log/tenerife:ro
     depends_on:
       loki:
         condition: service_started
