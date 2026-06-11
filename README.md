@@ -47,9 +47,22 @@ El proyecto ya incluye:
 2. Define como mínimo:
 
 ```env
+GENERATION_PROVIDER=gemini
+EMBEDDING_PROVIDER=gemini
 GOOGLE_API_KEY=tu_clave
 GENERATION_MODEL=gemini-2.5-flash-lite
 EMBEDDING_MODEL=models/gemini-embedding-001
+DATABASE_URL=postgresql://postgres:postgres@localhost:5432/tenerife_app
+```
+
+O para usar Ollama:
+
+```env
+GENERATION_PROVIDER=ollama
+EMBEDDING_PROVIDER=ollama
+OLLAMA_BASE_URL=http://127.0.0.1:11434
+GENERATION_MODEL=tenerife-gemma-4-12b-it
+EMBEDDING_MODEL=nomic-embed-text
 DATABASE_URL=postgresql://postgres:postgres@localhost:5432/tenerife_app
 ```
 
@@ -65,9 +78,12 @@ DATABASE_URL=postgresql://postgres:postgres@localhost:5432/tenerife_app
 | `APP_PORT` | Puerto del backend FastAPI. | `8000` |
 | `STREAMLIT_API_URL` | URL base que usa Streamlit para llamar a la API. | `http://127.0.0.1:8000` |
 | `STREAMLIT_SERVER_PORT` | Puerto en el que se expone Streamlit. | `8501` |
-| `GOOGLE_API_KEY` | Clave de API para Gemini y embeddings. | vacío |
-| `GENERATION_MODEL` | Modelo Gemini usado para generación. | `gemini-2.5-flash-lite` |
-| `EMBEDDING_MODEL` | Modelo usado para embeddings. | `models/gemini-embedding-001` |
+| `GENERATION_PROVIDER` | Proveedor del modelo generativo (`gemini` u `ollama`). | `gemini` |
+| `EMBEDDING_PROVIDER` | Proveedor de embeddings (`gemini` u `ollama`). | `gemini` |
+| `GOOGLE_API_KEY` | Clave de API para Gemini cuando usas ese proveedor. | vacío |
+| `GENERATION_MODEL` | Modelo usado por el proveedor generativo activo. | `gemini-2.5-flash-lite` |
+| `EMBEDDING_MODEL` | Modelo usado por el proveedor de embeddings activo. | `models/gemini-embedding-001` |
+| `OLLAMA_BASE_URL` | URL base del servidor Ollama. | `http://127.0.0.1:11434` |
 | `GENERATION_TEMPERATURE` | Temperatura del modelo generativo. | `0.2` |
 | `GENERATION_MAX_TOKENS` | Máximo de tokens de salida del LLM. | `1024` |
 | `RAG_TOP_K` | Número de chunks recuperados en retrieval. | `4` |
@@ -84,6 +100,16 @@ DATABASE_URL=postgresql://postgres:postgres@localhost:5432/tenerife_app
 | `OPEN_METEO_FORECAST_URL` | Endpoint de predicción meteorológica de Open-Meteo. | `https://api.open-meteo.com/v1/forecast` |
 
 Las variables más habituales ya aparecen en `.env.example`, pero la tabla anterior refleja toda la superficie configurable definida en `app\core\config.py`.
+
+### Variables extra para `docker-compose.ollama.yml`
+
+| Variable | Descripción | Valor por defecto |
+| --- | --- | --- |
+| `OLLAMA_CHAT_MODEL` | Nombre local con el que Ollama registra el modelo GGUF importado. | `tenerife-gemma-4-12b-it` |
+| `OLLAMA_MODEL_SOURCE_URL` | URL del GGUF que se descarga al inicializar Ollama. | `https://huggingface.co/unsloth/gemma-4-12b-it-GGUF/resolve/main/MTP/gemma-4-12b-it-Q8_0-MTP.gguf?download=true` |
+| `OLLAMA_MODEL_FILENAME` | Nombre del fichero GGUF guardado en el volumen compartido. | `gemma-4-12b-it-Q8_0-MTP.gguf` |
+| `OLLAMA_EMBEDDING_MODEL` | Modelo de embeddings que se hace `pull` en Ollama. | `nomic-embed-text` |
+| `HF_TOKEN` | Token opcional de Hugging Face si necesitas autenticación para descargar el GGUF. | vacío |
 
 ## Instalación local
 
@@ -171,6 +197,24 @@ Servicios disponibles:
 | Prometheus | `http://localhost:9090` | Scraping de `/metrics` |
 | Grafana | `http://localhost:3000` | Usuario `admin`, contraseña `admin` |
 | Loki | `http://localhost:3100` | Agregación de logs |
+
+### Docker Compose con Ollama
+
+Si quieres levantar también **Ollama** y que la aplicación use modelos locales, arranca la pila combinando ambos ficheros:
+
+```powershell
+docker compose -f docker-compose.yml -f docker-compose.ollama.yml up --build
+```
+
+Este overlay:
+
+- añade el servicio `ollama`
+- descarga por defecto el GGUF de **Unsloth Gemma 4 12B IT**
+- crea el modelo local `tenerife-gemma-4-12b-it`
+- hace `pull` del modelo de embeddings `nomic-embed-text`
+- reconfigura el backend para usar `GENERATION_PROVIDER=ollama` y `EMBEDDING_PROVIDER=ollama`
+
+La primera puesta en marcha puede tardar bastante porque descarga e importa el modelo GGUF.
 
 ## Observabilidad
 

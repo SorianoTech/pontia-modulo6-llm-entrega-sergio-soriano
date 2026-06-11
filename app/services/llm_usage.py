@@ -16,12 +16,14 @@ def extract_token_usage(message: Any) -> dict[str, int]:
     input_tokens = (
         usage.get("input_tokens")
         or token_usage.get("prompt_token_count")
+        or response_metadata.get("prompt_eval_count")
         or token_usage.get("input_tokens")
         or 0
     )
     output_tokens = (
         usage.get("output_tokens")
         or token_usage.get("candidates_token_count")
+        or response_metadata.get("eval_count")
         or token_usage.get("output_tokens")
         or 0
     )

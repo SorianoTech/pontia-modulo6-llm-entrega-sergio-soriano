@@ -1,0 +1,49 @@
+services:
+  web:
+    environment:
+      GENERATION_PROVIDER: ${GENERATION_PROVIDER:-ollama}
+      EMBEDDING_PROVIDER: ${EMBEDDING_PROVIDER:-ollama}
+      OLLAMA_BASE_URL: http://ollama:11434
+      GENERATION_MODEL: ${OLLAMA_CHAT_MODEL:-tenerife-gemma-4-12b-it}
+      EMBEDDING_MODEL: ${OLLAMA_EMBEDDING_MODEL:-nomic-embed-text}
+      GOOGLE_API_KEY: ${GOOGLE_API_KEY:-}
+    depends_on:
+      db:
+        condition: service_healthy
+      ollama:
+        condition: service_started
+      ollama-setup:
+        condition: service_completed_successfully
+
+  ollama:
+    image: ollama/ollama:0.6.8
+    container_name: tenerife-ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama-data:/root/.ollama
+      - ollama-imports:/models
+
+  ollama-setup:
+    image: python:3.11-slim
+    container_name: tenerife-ollama-setup
+    restart: "no"
+    environment:
+      OLLAMA_BASE_URL: http://ollama:11434
+      OLLAMA_CHAT_MODEL: ${OLLAMA_CHAT_MODEL:-tenerife-gemma-4-12b-it}
+      OLLAMA_MODEL_SOURCE_URL: ${OLLAMA_MODEL_SOURCE_URL:-https://huggingface.co/unsloth/gemma-4-12b-it-GGUF/resolve/main/MTP/gemma-4-12b-it-Q8_0-MTP.gguf?download=true}
+      OLLAMA_MODEL_FILENAME: ${OLLAMA_MODEL_FILENAME:-gemma-4-12b-it-Q8_0-MTP.gguf}
+      OLLAMA_EMBEDDING_MODEL: ${OLLAMA_EMBEDDING_MODEL:-nomic-embed-text}
+      OLLAMA_MODELS_DIR: /models
+      HF_TOKEN: ${HF_TOKEN:-}
+    command: python /scripts/ollama_setup.py
+    volumes:
+      - .\scripts\ollama_setup.py:/scripts/ollama_setup.py:ro
+      - ollama-imports:/models
+    depends_on:
+      ollama:
+        condition: service_started
+
+volumes:
+  ollama-data:
+  ollama-imports:

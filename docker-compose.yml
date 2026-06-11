@@ -22,13 +22,28 @@ services:
       dockerfile: Dockerfile
     container_name: tenerife-web
     environment:
-      DATABASE_URL: postgresql://postgres:postgres@db:5432/tenerife_app
-      APP_HOST: 0.0.0.0
-      APP_PORT: 8000
-      AUTO_INGEST_ON_STARTUP: "true"
+      DATABASE_URL: ${DATABASE_URL:-postgresql://postgres:postgres@db:5432/tenerife_app}
+      APP_HOST: ${APP_HOST:-0.0.0.0}
+      APP_PORT: ${APP_PORT:-8000}
+      AUTO_INGEST_ON_STARTUP: ${AUTO_INGEST_ON_STARTUP:-true}
+      GENERATION_PROVIDER: ${GENERATION_PROVIDER:-gemini}
+      EMBEDDING_PROVIDER: ${EMBEDDING_PROVIDER:-gemini}
       GOOGLE_API_KEY: ${GOOGLE_API_KEY:-}
       GENERATION_MODEL: ${GENERATION_MODEL:-gemini-2.5-flash-lite}
       EMBEDDING_MODEL: ${EMBEDDING_MODEL:-models/gemini-embedding-001}
+      OLLAMA_BASE_URL: ${OLLAMA_BASE_URL:-http://127.0.0.1:11434}
+      GENERATION_TEMPERATURE: ${GENERATION_TEMPERATURE:-0.2}
+      GENERATION_MAX_TOKENS: ${GENERATION_MAX_TOKENS:-1024}
+      RAG_TOP_K: ${RAG_TOP_K:-4}
+      CHUNK_SIZE: ${CHUNK_SIZE:-500}
+      CHUNK_OVERLAP: ${CHUNK_OVERLAP:-50}
+      EMBEDDING_DIMENSIONS: ${EMBEDDING_DIMENSIONS:-3072}
+      REQUEST_TIMEOUT_SECONDS: ${REQUEST_TIMEOUT_SECONDS:-15}
+      DATA_PDF_PATH: ${DATA_PDF_PATH:-/app/data/TENERIFE.pdf}
+      AUDIT_LOG_PATH: ${AUDIT_LOG_PATH:-/app/logs/app.jsonl}
+      WEATHER_LOCATION: ${WEATHER_LOCATION:-Tenerife}
+      OPEN_METEO_GEOCODING_URL: ${OPEN_METEO_GEOCODING_URL:-https://geocoding-api.open-meteo.com/v1/search}
+      OPEN_METEO_FORECAST_URL: ${OPEN_METEO_FORECAST_URL:-https://api.open-meteo.com/v1/forecast}
     ports:
       - "8000:8000"
       - "8501:8501"

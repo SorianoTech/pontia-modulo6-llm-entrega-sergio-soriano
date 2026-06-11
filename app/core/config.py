@@ -19,11 +19,14 @@ class Settings(BaseSettings):
     streamlit_api_url: str = "http://127.0.0.1:8000"
     streamlit_server_port: int = 8501
     google_api_key: str | None = Field(default=None, alias="GOOGLE_API_KEY")
+    generation_provider: str = "gemini"
+    embedding_provider: str = "gemini"
     generation_model: str = "gemini-2.5-flash-lite"
     embedding_model: str = "models/gemini-embedding-001"
+    ollama_base_url: str = "http://127.0.0.1:11434"
     generation_temperature: float = 0.2
     generation_max_tokens: int = 1024
-    rag_top_k: int = 4
+    rag_top_k: int = 3
     chunk_size: int = 500
     chunk_overlap: int = 50
     embedding_dimensions: int = 3072

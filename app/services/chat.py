@@ -37,7 +37,13 @@ from app.services.conversation import (
     weather_intent,
 )
 from app.services.ingestion import ingest_pdf
-from app.services.llm import get_chat_client, get_embeddings_client
+from app.services.llm import (
+    get_chat_client,
+    get_embeddings_client,
+    get_generation_model_name,
+    require_embedding_configuration,
+    require_generation_configuration,
+)
 from app.services.llm_usage import extract_token_usage
 from app.services.prompts import (
     build_chat_prompt,
@@ -93,9 +99,10 @@ def _should_use_rag(user_message: str) -> bool:
 
 def ingest_if_requested(force: bool = False) -> dict:
     """Run ingestion when configured dependencies for document indexing are available."""
-    settings = get_settings()
-    if not settings.google_api_key:
-        raise ChatServiceError("Falta GOOGLE_API_KEY para indexar el corpus documental.")
+    try:
+        require_embedding_configuration()
+    except RuntimeError as exc:
+        raise ChatServiceError(str(exc)) from exc
     return ingest_pdf(force_reindex=force)
 
 
@@ -126,9 +133,13 @@ def _retrieve_documents(question: str) -> list[dict]:
 
 def chat_with_tenerife(payload: ChatRequest) -> ChatResponse:
     """Process a conversational turn with RAG, optional weather lookup, and persistence."""
-    settings = get_settings()
-    if not settings.google_api_key:
-        raise ChatServiceError("Falta GOOGLE_API_KEY para usar el chat conversacional.")
+    try:
+        require_generation_configuration()
+        require_embedding_configuration()
+    except RuntimeError as exc:
+        raise ChatServiceError(str(exc)) from exc
+
+    generation_model_name = get_generation_model_name()
 
     bootstrap_database()
     _ensure_indexed()
@@ -183,7 +194,7 @@ def chat_with_tenerife(payload: ChatRequest) -> ChatResponse:
     logger.info(
         "chat_llm_prompt_prepared",
         session_id=str(session_id),
-        model=settings.generation_model,
+        model=generation_model_name,
         system_instruction=system_instruction,
         llm_prompt=prompt,
     )
@@ -204,7 +215,7 @@ def chat_with_tenerife(payload: ChatRequest) -> ChatResponse:
     logger.info(
         "chat_llm_completed",
         session_id=str(session_id),
-        model=settings.generation_model,
+        model=generation_model_name,
         latency_seconds=round(llm_elapsed, 4),
         input_tokens=token_usage["input_tokens"],
         output_tokens=token_usage["output_tokens"],
@@ -242,17 +253,17 @@ def chat_with_tenerife(payload: ChatRequest) -> ChatResponse:
         weather_used=str(bool(weather_result)).lower(),
     ).inc()
     CHAT_SOURCE_COUNT.observe(len(sources))
-    LLM_REQUESTS_TOTAL.labels(model=settings.generation_model).inc()
-    LLM_INPUT_TOKENS_TOTAL.labels(model=settings.generation_model).inc(
+    LLM_REQUESTS_TOTAL.labels(model=generation_model_name).inc()
+    LLM_INPUT_TOKENS_TOTAL.labels(model=generation_model_name).inc(
         token_usage["input_tokens"]
     )
-    LLM_OUTPUT_TOKENS_TOTAL.labels(model=settings.generation_model).inc(
+    LLM_OUTPUT_TOKENS_TOTAL.labels(model=generation_model_name).inc(
         token_usage["output_tokens"]
     )
-    LLM_TOTAL_TOKENS_TOTAL.labels(model=settings.generation_model).inc(
+    LLM_TOTAL_TOKENS_TOTAL.labels(model=generation_model_name).inc(
         token_usage["total_tokens"]
     )
-    LLM_REQUEST_DURATION_SECONDS.labels(model=settings.generation_model).observe(
+    LLM_REQUEST_DURATION_SECONDS.labels(model=generation_model_name).observe(
         llm_elapsed
     )
 
