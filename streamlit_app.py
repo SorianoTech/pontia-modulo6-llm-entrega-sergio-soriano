@@ -50,7 +50,7 @@ def _inject_theme_styles() -> None:
             .hero-banner {
                 padding: 1.4rem 1.5rem;
                 border-radius: 1.25rem;
-                background: linear-gradient(135deg, #0d3b66 0%, #007ba7 55%, #f4a261 100%);
+                background: linear-gradient(135deg, #0d3b66 0%, #117a7e 45%, #34d399 100%);
                 color: white;
                 box-shadow: 0 18px 36px rgba(13, 59, 102, 0.18);
                 margin-bottom: 1rem;
