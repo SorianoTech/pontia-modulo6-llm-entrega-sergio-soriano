@@ -83,10 +83,18 @@ def _inject_theme_styles() -> None:
                 color: #334155 !important;
             }
             [data-testid="stChatMessage"]:has([data-testid="chatAvatarIcon-user"]) {
-                background: linear-gradient(180deg, rgba(232, 242, 250, 0.95), rgba(220, 252, 231, 0.9));
+                background: linear-gradient(
+                    180deg,
+                    rgba(232, 242, 250, 0.95),
+                    rgba(220, 252, 231, 0.9)
+                );
             }
             [data-testid="stChatMessage"]:has([data-testid="chatAvatarIcon-assistant"]) {
-                background: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(255, 244, 230, 0.92));
+                background: linear-gradient(
+                    180deg,
+                    rgba(255, 255, 255, 0.96),
+                    rgba(255, 244, 230, 0.92)
+                );
             }
             [data-testid="stChatInput"] textarea {
                 border-radius: 0.9rem;
