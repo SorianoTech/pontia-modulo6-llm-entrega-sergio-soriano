@@ -68,9 +68,29 @@ def _inject_theme_styles() -> None:
                 border-radius: 1rem;
                 border: 1px solid rgba(13, 59, 102, 0.08);
                 box-shadow: 0 10px 24px rgba(15, 23, 42, 0.05);
+                background: rgba(255, 255, 255, 0.92);
+            }
+            [data-testid="stChatMessage"] [data-testid="stMarkdownContainer"],
+            [data-testid="stChatMessage"] [data-testid="stMarkdownContainer"] p,
+            [data-testid="stChatMessage"] [data-testid="stMarkdownContainer"] li,
+            [data-testid="stChatMessage"] [data-testid="stMarkdownContainer"] span,
+            [data-testid="stChatMessage"] [data-testid="stMarkdownContainer"] div,
+            [data-testid="stChatMessage"] [data-testid="stCaptionContainer"] {
+                color: #1f2937 !important;
+            }
+            [data-testid="stChatMessage"] small,
+            [data-testid="stChatMessage"] code {
+                color: #334155 !important;
+            }
+            [data-testid="stChatMessage"]:has([data-testid="chatAvatarIcon-user"]) {
+                background: linear-gradient(180deg, rgba(232, 242, 250, 0.95), rgba(220, 252, 231, 0.9));
+            }
+            [data-testid="stChatMessage"]:has([data-testid="chatAvatarIcon-assistant"]) {
+                background: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(255, 244, 230, 0.92));
             }
             [data-testid="stChatInput"] textarea {
                 border-radius: 0.9rem;
+                color: #1f2937;
             }
             .stButton > button {
                 background: linear-gradient(135deg, #ff7a18 0%, #f4a261 100%);
@@ -78,6 +98,14 @@ def _inject_theme_styles() -> None:
                 border: none;
                 border-radius: 999px;
                 font-weight: 600;
+            }
+            @media (max-width: 768px) {
+                [data-testid="stChatMessage"] {
+                    background: rgba(255, 255, 255, 0.96);
+                }
+                [data-testid="stChatInput"] textarea {
+                    background: white;
+                }
             }
         </style>
         """,
